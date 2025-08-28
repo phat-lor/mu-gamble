@@ -69,7 +69,7 @@
 		const urlParams = $page.url.searchParams;
 		currentPage = parseInt(urlParams.get('page') || '1');
 		timeframe = urlParams.get('timeframe') || 'all';
-		metric = urlParams.get('metric') || 'total_wagered';
+		metric = urlParams.get('metric') || 'balance';
 		limit = parseInt(urlParams.get('limit') || '20');
 	}
 
