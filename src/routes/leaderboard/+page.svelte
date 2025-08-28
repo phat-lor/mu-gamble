@@ -57,7 +57,7 @@
 	];
 
 	const metricOptions = [
-		{ value: 'balance', label: m['leaderboard.metric.balance']() }
+		{ value: 'balance', label: m['leaderboard.metric.balance']() },
 		{ value: 'total_wagered', label: m['leaderboard.metric.totalWagered']() },
 		{ value: 'total_profit', label: m['leaderboard.metric.totalProfit']() },
 		{ value: 'biggest_win', label: m['leaderboard.metric.biggestWin']() },
