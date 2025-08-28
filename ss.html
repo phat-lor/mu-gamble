@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>3D Coin Flip Game</title>
+		<style>
+			:root {
+				color-scheme: dark;
+			}
+			body {
+				margin: 0;
+				font-family:
+					ui-sans-serif,
+					system-ui,
+					-apple-system,
+					Segoe UI,
+					Roboto,
+					Inter,
+					'Helvetica Neue',
+					Arial;
+				background: #0b0e13;
+				color: #e6e8eb;
+			}
+			.wrap {
+				display: grid;
+				grid-template-rows: auto 1fr auto;
+				min-height: 100svh;
+			}
+			header {
+				padding: 12px 16px;
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				border-bottom: 1px solid #1b212b;
+				background: #0e1218;
+				position: sticky;
+				top: 0;
+				z-index: 5;
+			}
+			header h1 {
+				margin: 0;
+				font-size: 16px;
+				font-weight: 600;
+				letter-spacing: 0.2px;
+				opacity: 0.92;
+			}
+			#ui {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				margin-left: auto;
+			}
+			button {
+				appearance: none;
+				border: 1px solid #263041;
+				background: #121826;
+				color: #d9e1ee;
+				padding: 8px 12px;
+				border-radius: 10px;
+				cursor: pointer;
+				font-weight: 600;
+				font-size: 13px;
+				transition:
+					transform 0.06s ease,
+					background 0.2s ease,
+					border-color 0.2s ease;
+			}
+			button:hover {
+				background: #151e2e;
+				border-color: #2f3d55;
+			}
+			button:active {
+				transform: translateY(1px);
+			}
+			button[disabled] {
+				opacity: 0.55;
+				cursor: not-allowed;
+			}
+			#canvas {
+				width: 100%;
+				height: 100%;
+				display: block;
+			}
+			.footer {
+				display: flex;
+				justify-content: center;
+				gap: 16px;
+				padding: 10px 16px;
+				border-top: 1px solid #1b212b;
+				background: #0e1218;
+				font-size: 12px;
+				color: #b8c2d6;
+			}
+			.pill {
+				padding: 4px 8px;
+				border: 1px solid #263041;
+				border-radius: 999px;
+			}
+			.toast {
+				position: fixed;
+				left: 50%;
+				bottom: 20px;
+				transform: translateX(-50%);
+				background: #111827;
+				color: #e5e7eb;
+				border: 1px solid #283347;
+				padding: 10px 14px;
+				border-radius: 12px;
+				font-weight: 600;
+				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.25s ease;
+			}
+			.toast.show {
+				opacity: 1;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrap">
+			<header>
+				<h1>🎲 3D Coin Flip</h1>
+				<div id="ui">
+					<button id="btn-random">Random Flip</button>
+					<button id="btn-head">Spin to Head</button>
+					<button id="btn-tail">Spin to Tail</button>
+					<button id="btn-reset" title="Reset view (if needed)">Reset View</button>
+				</div>
+			</header>
+			<main>
+				<canvas id="canvas" aria-label="3D coin canvas" tabindex="0"></canvas>
+			</main>
+			<div class="footer">
+				<div class="pill">Idle: coin spins continuously</div>
+				<div class="pill">Click anywhere to spin</div>
+				<div class="pill">Different face colors + real thickness</div>
+			</div>
+		</div>
+		<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+		<!-- Three.js CDN -->
+		<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+
+		<script>
+			// --- helpers
+			const toast = (msg) => {
+				const t = document.getElementById('toast');
+				t.textContent = msg;
+				t.classList.add('show');
+				clearTimeout(toast._timer);
+				toast._timer = setTimeout(() => t.classList.remove('show'), 1500);
+			};
+
+			const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
+
+			// --- scene setup
+			const canvas = document.getElementById('canvas');
+			const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+			renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+			const scene = new THREE.Scene();
+			const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+			camera.position.set(0.8, 0.9, 2.3);
+			camera.lookAt(0, 0, 0);
+
+			// OrbitControls removed for compatibility on some canvases.
+			controls.enableDamping = true;
+			controls.enablePan = false;
+			controls.minDistance = 1.2;
+			controls.maxDistance = 5;
+
+			// lighting
+			const hemi = new THREE.HemisphereLight(0x9ecbff, 0x0b1020, 0.6);
+			scene.add(hemi);
+			const key = new THREE.DirectionalLight(0xffffff, 0.85);
+			key.position.set(3, 4, 2);
+			scene.add(key);
+			const rim = new THREE.DirectionalLight(0x6aa6ff, 0.4);
+			rim.position.set(-3, 2, -3);
+			scene.add(rim);
+
+			// ground shadow catcher (subtle)
+			const groundGeo = new THREE.CircleGeometry(3, 64);
+			const groundMat = new THREE.MeshBasicMaterial({
+				color: 0x0a0f18,
+				transparent: true,
+				opacity: 0.6
+			});
+			const ground = new THREE.Mesh(groundGeo, groundMat);
+			ground.rotation.x = -Math.PI / 2;
+			ground.position.y = -0.45;
+			scene.add(ground);
+
+			// --- coin creation
+			// dimensions: radius=1, thickness=0.22 (user wanted real thickness)
+			const COIN_RADIUS = 1,
+				COIN_THICKNESS = 0.22;
+
+			// edge (cylinder)
+			const edgeGeo = new THREE.CylinderGeometry(
+				COIN_RADIUS,
+				COIN_RADIUS,
+				COIN_THICKNESS,
+				96,
+				1,
+				true
+			);
+
+			// small bumpiness using normal map-like stripes (procedural via vertex colors)
+			const edgeMat = new THREE.MeshStandardMaterial({
+				color: 0xb7c3d7,
+				metalness: 0.9,
+				roughness: 0.35,
+				side: THREE.DoubleSide
+			});
+			const edge = new THREE.Mesh(edgeGeo, edgeMat);
+
+			// face textures via canvas
+			function faceTexture(label, bg, fg) {
+				const size = 512;
+				const cvs = document.createElement('canvas');
+				cvs.width = cvs.height = size;
+				const ctx = cvs.getContext('2d');
+				ctx.fillStyle = bg;
+				ctx.beginPath();
+				ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+				ctx.fill();
+				// decorative ring
+				ctx.lineWidth = size * 0.05;
+				ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+				ctx.beginPath();
+				ctx.arc(size / 2, size / 2, size * 0.42, 0, Math.PI * 2);
+				ctx.stroke();
+				// text
+				ctx.fillStyle = fg;
+				ctx.font = `bold ${size * 0.36}px system-ui, -apple-system, Segoe UI, Roboto`;
+				ctx.textAlign = 'center';
+				ctx.textBaseline = 'middle';
+				ctx.fillText(label, size / 2, size / 2);
+				const tex = new THREE.CanvasTexture(cvs);
+				tex.anisotropy = 8;
+				tex.generateMipmaps = true;
+				tex.needsUpdate = true;
+				return tex;
+			}
+
+			const headTex = faceTexture('H', '#1d9bf0', '#f8fbff'); // HEAD: blue face
+			const tailTex = faceTexture('T', '#f59e0b', '#0b0e13'); // TAIL: amber face
+
+			const faceMatHead = new THREE.MeshStandardMaterial({
+				map: headTex,
+				metalness: 0.3,
+				roughness: 0.8
+			});
+			const faceMatTail = new THREE.MeshStandardMaterial({
+				map: tailTex,
+				metalness: 0.3,
+				roughness: 0.8
+			});
+
+			const faceGeo = new THREE.CircleGeometry(COIN_RADIUS, 96);
+			const faceTop = new THREE.Mesh(faceGeo, faceMatHead); // +Z is "front"
+			const faceBot = new THREE.Mesh(faceGeo, faceMatTail);
+
+			// assemble coin group
+			const coin = new THREE.Group();
+			coin.add(edge);
+			faceTop.position.y = COIN_THICKNESS / 2 + 0.0005;
+			faceTop.rotation.x = -Math.PI / 2;
+			coin.add(faceTop);
+
+			faceBot.position.y = -COIN_THICKNESS / 2 - 0.0005;
+			faceBot.rotation.x = Math.PI / 2;
+			coin.add(faceBot);
+
+			scene.add(coin);
+
+			// initial orientation (HEAD up = top face visible)
+			coin.rotation.x = 0;
+
+			// --- animation state
+			let isSpinning = false; // in-progress controlled spin
+			let idle = true; // idle slow spin flag
+			let idleSpeedY = 0.008; // constant idle rotation around Y
+			let tumbleSpeed = 0.0; // extra Y spin during flip
+
+			function startSpin(targetSide /* 'head' | 'tail' | null */) {
+				if (isSpinning) return; // prevent re-entry
+				isSpinning = true;
+				idle = false;
+
+				// Determine final orientation: 0 for head-up, PI for tail-up
+				let endPhase =
+					targetSide === 'head'
+						? 0
+						: targetSide === 'tail'
+							? Math.PI
+							: Math.random() < 0.5
+								? 0
+								: Math.PI;
+
+				// Choose a big number of flips to feel random
+				const fullFlips = Math.floor(12 + Math.random() * 10); // 12..21
+				const overshoot = Math.random() * 0.25 - 0.125; // slight randomness at the end
+				const startX = coin.rotation.x % (Math.PI * 2);
+				const targetX =
+					startX + fullFlips * (Math.PI * 2) + endPhase - (startX % (Math.PI * 2)) + overshoot;
+
+				const duration = 1800 + Math.random() * 900; // 1.8s .. 2.7s
+				const startTime = performance.now();
+
+				// Increase Y tumble while flipping, then decay
+				tumbleSpeed = 0.25 + Math.random() * 0.35; // fast at start
+
+				function easeOutCubic(t) {
+					return 1 - Math.pow(1 - t, 3);
+				}
+
+				const spinTick = (now) => {
+					const t = clamp((now - startTime) / duration, 0, 1);
+					const e = easeOutCubic(t);
+					coin.rotation.x = startX + (targetX - startX) * e;
+
+					// decay tumble speed
+					tumbleSpeed *= 0.985;
+					coin.rotation.y += tumbleSpeed;
+
+					if (t < 1) {
+						requestAnimationFrame(spinTick);
+					} else {
+						// snap cleanly to exact up orientation (remove overshoot)
+						coin.rotation.x = Math.round(coin.rotation.x / Math.PI) * Math.PI;
+						isSpinning = false;
+						idle = true;
+						tumbleSpeed = 0;
+
+						const landedHead = Math.abs(coin.rotation.x % (Math.PI * 2)) < 1e-3;
+						toast(landedHead ? 'Result: HEAD' : 'Result: TAIL');
+					}
+				};
+				requestAnimationFrame(spinTick);
+			}
+
+			// idle animation
+			function animate() {
+				requestAnimationFrame(animate);
+				if (idle && !isSpinning) {
+					coin.rotation.y += idleSpeedY;
+				}
+
+				renderer.render(scene, camera);
+			}
+
+			// resize handling
+			function onResize() {
+				const w = window.innerWidth;
+				const h = Math.max(200, window.innerHeight - 110);
+				renderer.setSize(w, h, false);
+				camera.aspect = w / h;
+				camera.updateProjectionMatrix();
+			}
+			window.addEventListener('resize', onResize);
+			// initial size
+			const setInitialSize = () => {
+				canvas.style.height = window.innerHeight - 110 + 'px';
+				onResize();
+			};
+			setInitialSize();
+
+			// Interactions
+			document.getElementById('btn-random').onclick = () => startSpin(null);
+			document.getElementById('btn-head').onclick = () => startSpin('head');
+			document.getElementById('btn-tail').onclick = () => startSpin('tail');
+			document.getElementById('btn-reset').onclick = () => {
+				camera.position.set(0.8, 0.9, 2.3);
+				camera.lookAt(0, 0, 0);
+			};
+
+			// Click anywhere to spin (random)
+			window.addEventListener('click', (e) => {
+				// ignore UI button clicks
+				if (e.target.tagName === 'BUTTON') return;
+				startSpin(null);
+			});
+
+			animate();
+			toast('Click to spin the coin');
+		</script>
+	</body>
+</html>
