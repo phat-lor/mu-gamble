@@ -9,7 +9,9 @@ const leaderboardParamsSchema = z.object({
 	page: z.coerce.number().min(1).default(1),
 	limit: z.coerce.number().min(1).max(100).default(20),
 	timeframe: z.enum(['all', '24h', '7d', '30d']).default('all'),
-	metric: z.enum(['total_wagered', 'total_profit', 'biggest_win', 'win_rate']).default('total_wagered')
+	metric: z
+		.enum(['total_wagered', 'total_profit', 'biggest_win', 'win_rate', 'balance'])
+		.default('total_wagered')
 });
 
 export interface LeaderboardEntry {
@@ -20,6 +22,7 @@ export interface LeaderboardEntry {
 	biggestWin: number;
 	winRate: number;
 	totalBets: number;
+	balance: number;
 }
 
 export interface LeaderboardResponse {
@@ -55,6 +58,8 @@ function getOrderByClause(metric: string) {
 			return desc(sql`biggest_win`);
 		case 'win_rate':
 			return desc(sql`win_rate`);
+		case 'balance':
+			return desc(user.balance);
 		default: // total_wagered
 			return desc(sql`total_wagered`);
 	}
@@ -81,16 +86,22 @@ export const GET: RequestHandler = async ({ url }) => {
 			.select({
 				userId: bet.userId,
 				username: user.username,
+				balance: user.balance,
 				totalWagered: sql<number>`COALESCE(SUM(${bet.amount}), 0)`.as('total_wagered'),
-				totalProfit: sql<number>`COALESCE(SUM(${bet.payout}) - SUM(${bet.amount}), 0)`.as('total_profit'),
+				totalProfit: sql<number>`COALESCE(SUM(${bet.payout}) - SUM(${bet.amount}), 0)`.as(
+					'total_profit'
+				),
 				biggestWin: sql<number>`COALESCE(MAX(${bet.payout}), 0)`.as('biggest_win'),
 				totalBets: sql<number>`COUNT(*)`.as('total_bets'),
 				totalWins: sql<number>`SUM(CASE WHEN ${bet.win} = 1 THEN 1 ELSE 0 END)`.as('total_wins'),
-				winRate: sql<number>`CASE WHEN COUNT(*) > 0 THEN ROUND((SUM(CASE WHEN ${bet.win} = 1 THEN 1 ELSE 0 END) * 100.0) / COUNT(*), 2) ELSE 0 END`.as('win_rate')
+				winRate:
+					sql<number>`CASE WHEN COUNT(*) > 0 THEN ROUND((SUM(CASE WHEN ${bet.win} = 1 THEN 1 ELSE 0 END) * 100.0) / COUNT(*), 2) ELSE 0 END`.as(
+						'win_rate'
+					)
 			})
 			.from(bet)
 			.innerJoin(user, eq(bet.userId, user.id))
-			.groupBy(bet.userId, user.username)
+			.groupBy(bet.userId, user.username, user.balance)
 			.having(sql`COUNT(*) >= 5`); // Only show users with at least 5 bets
 
 		// Add time filter if specified
@@ -99,29 +110,26 @@ export const GET: RequestHandler = async ({ url }) => {
 			query = query.where(timeFilter) as typeof baseQuery;
 		}
 
-		// Get total count for pagination
-		const countQuery = db
+		// Get total count for pagination by counting qualifying users
+		let countQueryBase = db
 			.select({
-				count: sql<number>`COUNT(DISTINCT ${bet.userId})`
+				userId: bet.userId
 			})
 			.from(bet)
-			.innerJoin(user, eq(bet.userId, user.id));
+			.innerJoin(user, eq(bet.userId, user.id))
+			.groupBy(bet.userId)
+			.having(sql`COUNT(*) >= 5`);
 
-		let countQueryWithFilter = countQuery;
 		if (timeFilter) {
-			countQueryWithFilter = countQuery.where(timeFilter) as typeof countQuery;
+			countQueryBase = countQueryBase.where(timeFilter) as typeof countQueryBase;
 		}
 
-		// Add having clause for count query
+		// Count the number of qualifying users
 		const totalCountResult = await db
 			.select({
 				count: sql<number>`COUNT(*)`
 			})
-			.from(
-				countQueryWithFilter
-					.having(sql`COUNT(*) >= 5`)
-					.as('subquery')
-			);
+			.from(countQueryBase.as('qualifying_users'));
 
 		const totalEntries = totalCountResult[0]?.count || 0;
 		const totalPages = Math.ceil(totalEntries / limit);
@@ -136,6 +144,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		const leaderboard: LeaderboardEntry[] = leaderboardData.map((entry, index) => ({
 			rank: offset + index + 1,
 			username: entry.username,
+			balance: Math.round(entry.balance * 100) / 100,
 			totalWagered: Math.round(entry.totalWagered * 100) / 100,
 			totalProfit: Math.round(entry.totalProfit * 100) / 100,
 			biggestWin: Math.round(entry.biggestWin * 100) / 100,
@@ -157,7 +166,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		return json(response);
 	} catch (error) {
 		console.error('Leaderboard API error:', error);
-		
+
 		if (error instanceof z.ZodError) {
 			return json(
 				{ success: false, error: 'Invalid parameters', details: error.errors },
@@ -165,9 +174,6 @@ export const GET: RequestHandler = async ({ url }) => {
 			);
 		}
 
-		return json(
-			{ success: false, error: 'Internal server error' },
-			{ status: 500 }
-		);
+		return json({ success: false, error: 'Internal server error' }, { status: 500 });
 	}
 };

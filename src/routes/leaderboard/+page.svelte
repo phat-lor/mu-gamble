@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import * as Card from '$lib/components/ui/card';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { Button } from '$lib/components/ui/button';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import * as m from '$lib/paraglide/messages';
@@ -16,6 +17,7 @@
 		biggestWin: number;
 		winRate: number;
 		totalBets: number;
+		balance: number;
 	}
 
 	interface LeaderboardResponse {
@@ -43,7 +45,7 @@
 	// Filters
 	let currentPage = 1;
 	let timeframe = 'all';
-	let metric = 'total_wagered';
+	let metric = 'balance';
 	let limit = 20;
 
 	// Filter options
@@ -58,7 +60,8 @@
 		{ value: 'total_wagered', label: m['leaderboard.metric.totalWagered']() },
 		{ value: 'total_profit', label: m['leaderboard.metric.totalProfit']() },
 		{ value: 'biggest_win', label: m['leaderboard.metric.biggestWin']() },
-		{ value: 'win_rate', label: m['leaderboard.metric.winRate']() }
+		{ value: 'win_rate', label: m['leaderboard.metric.winRate']() },
+		{ value: 'balance', label: m['leaderboard.metric.balance']() }
 	];
 
 	// Initialize from URL params
@@ -139,6 +142,16 @@
 
 	function formatPercentage(value: number): string {
 		return `${value.toFixed(1)}%`;
+	}
+
+	function formatCompactCurrency(value: number): string {
+		if (value >= 1000000) {
+			return `${(value / 1000000).toFixed(2).replace(/\.?0+$/, '')}M`;
+		} else if (value >= 1000) {
+			return `${(value / 1000).toFixed(1).replace(/\.?0+$/, '')}K`;
+		} else {
+			return value.toFixed(2);
+		}
 	}
 
 	function getRankColor(rank: number): string {
@@ -275,11 +288,11 @@
 	{:else if loading}
 		<!-- Loading skeleton -->
 		<div class="scrollbar-hide -mx-6 overflow-x-auto px-6">
-			<div class="min-w-[800px] space-y-0">
+			<div class="min-w-[900px] space-y-0">
 				{#each Array(8) as _}
 					<div
-						class="grid grid-cols-8 gap-4 border-b border-border/10 py-4"
-						style="grid-template-columns: 60px 1fr 100px 100px 100px 80px 60px 80px;"
+						class="grid grid-cols-9 gap-4 border-b border-border/10 py-4"
+						style="grid-template-columns: 60px 1fr 100px 100px 100px 100px 80px 60px 80px;"
 					>
 						<div class="text-center">
 							<Skeleton class="mx-auto h-4 w-8" />
@@ -288,13 +301,16 @@
 							<Skeleton class="h-4 w-24" />
 						</div>
 						<div class="text-right">
-							<Skeleton class="ml-auto h-4 w-16" />
+							<Skeleton class="ml-auto h-4 w-12" />
 						</div>
 						<div class="text-right">
-							<Skeleton class="ml-auto h-4 w-16" />
+							<Skeleton class="ml-auto h-4 w-12" />
 						</div>
 						<div class="text-right">
-							<Skeleton class="ml-auto h-4 w-16" />
+							<Skeleton class="ml-auto h-4 w-12" />
+						</div>
+						<div class="text-right">
+							<Skeleton class="ml-auto h-4 w-12" />
 						</div>
 						<div class="text-right">
 							<Skeleton class="ml-auto h-4 w-12" />
@@ -315,14 +331,15 @@
 	{:else}
 		<!-- Leaderboard Table -->
 		<div class="scrollbar-hide -mx-6 overflow-x-auto px-6">
-			<div class="min-w-[800px] space-y-0">
+			<div class="min-w-[900px] space-y-0">
 				<!-- Table Header -->
 				<div
-					class="grid grid-cols-8 gap-4 border-b border-border/20 pb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
-					style="grid-template-columns: 60px 1fr 100px 100px 100px 80px 60px 80px;"
+					class="grid grid-cols-9 gap-4 border-b border-border/20 pb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+					style="grid-template-columns: 60px 1fr 100px 100px 100px 100px 80px 60px 80px;"
 				>
 					<div class="text-center">Rank</div>
 					<div>Player</div>
+					<div class="text-right">Balance</div>
 					<div class="text-right">Wagered</div>
 					<div class="text-right">Profit</div>
 					<div class="text-right">Best Win</div>
@@ -333,8 +350,8 @@
 				<!-- Table Body -->
 				{#each leaderboardData as entry}
 					<div
-						class="grid grid-cols-8 gap-4 border-b border-border/5 py-3 transition-colors hover:bg-muted/20"
-						style="grid-template-columns: 60px 1fr 100px 100px 100px 80px 60px 80px;"
+						class="grid grid-cols-9 gap-4 border-b border-border/5 py-3 transition-colors hover:bg-muted/20"
+						style="grid-template-columns: 60px 1fr 100px 100px 100px 100px 80px 60px 80px;"
 					>
 						<div class="text-center">
 							{#if entry.rank <= 3}
@@ -352,19 +369,62 @@
 							{/if}
 						</div>
 						<div class="text-right">
-							<span class="font-mono text-sm">{formatCurrency(entry.totalWagered)}</span>
+							<Tooltip.Root>
+								<Tooltip.Trigger>
+									<span class="font-mono text-sm font-semibold text-primary">
+										{formatCompactCurrency(entry.balance)}
+									</span>
+								</Tooltip.Trigger>
+								<Tooltip.Content>
+									<p class="font-mono text-sm">{formatCurrency(entry.balance)}</p>
+								</Tooltip.Content>
+							</Tooltip.Root>
 						</div>
 						<div class="text-right">
-							<span
-								class="font-mono text-sm {entry.totalProfit >= 0
-									? 'text-green-600'
-									: 'text-red-600'}"
-							>
-								{entry.totalProfit >= 0 ? '+' : ''}{formatCurrency(entry.totalProfit)}
-							</span>
+							<Tooltip.Root>
+								<Tooltip.Trigger>
+									<span class="font-mono text-sm">
+										{formatCompactCurrency(entry.totalWagered)}
+									</span>
+								</Tooltip.Trigger>
+								<Tooltip.Content>
+									<p class="font-mono text-sm">{formatCurrency(entry.totalWagered)}</p>
+								</Tooltip.Content>
+							</Tooltip.Root>
 						</div>
 						<div class="text-right">
-							<span class="font-mono text-sm">{formatCurrency(entry.biggestWin)}</span>
+							<Tooltip.Root>
+								<Tooltip.Trigger>
+									<span
+										class="font-mono text-sm {entry.totalProfit >= 0
+											? 'text-green-600'
+											: 'text-red-600'}"
+									>
+										{entry.totalProfit >= 0 ? '+' : ''}{formatCompactCurrency(entry.totalProfit)}
+									</span>
+								</Tooltip.Trigger>
+								<Tooltip.Content>
+									<p
+										class="font-mono text-sm {entry.totalProfit >= 0
+											? 'text-green-600'
+											: 'text-red-600'}"
+									>
+										{entry.totalProfit >= 0 ? '+' : ''}{formatCurrency(entry.totalProfit)}
+									</p>
+								</Tooltip.Content>
+							</Tooltip.Root>
+						</div>
+						<div class="text-right">
+							<Tooltip.Root>
+								<Tooltip.Trigger>
+									<span class="font-mono text-sm">
+										{formatCompactCurrency(entry.biggestWin)}
+									</span>
+								</Tooltip.Trigger>
+								<Tooltip.Content>
+									<p class="font-mono text-sm">{formatCurrency(entry.biggestWin)}</p>
+								</Tooltip.Content>
+							</Tooltip.Root>
 						</div>
 						<div class="text-right">
 							<span

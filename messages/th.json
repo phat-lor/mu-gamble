@@ -92,7 +92,8 @@
 			"totalWagered": "ยอดเดิมพันรวม",
 			"totalProfit": "กำไรรวม",
 			"biggestWin": "การชนะที่ใหญ่ที่สุด",
-			"winRate": "อัตราการชนะ"
+			"winRate": "อัตราการชนะ",
+			"balance": "ยอดเงิน"
 		}
 	}
 }

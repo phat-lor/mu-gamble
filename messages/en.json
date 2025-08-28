@@ -92,7 +92,8 @@
 			"totalWagered": "Total Wagered",
 			"totalProfit": "Total Profit",
 			"biggestWin": "Biggest Win",
-			"winRate": "Win Rate"
+			"winRate": "Win Rate",
+			"balance": "Balance"
 		}
 	}
 }
