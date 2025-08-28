@@ -38,9 +38,9 @@
 				title: m['navigation.main'](),
 				items: [
 					{ name: m['navigation.home'](), href: '/', icon: HomeIcon },
-					{ name: m['navigation.leaderboard'](), href: '/leaderboard', icon: TrophyIcon },
-					{ name: m['navigation.notifications'](), href: '/notifications', icon: BellIcon },
-					{ name: m['navigation.about'](), href: '/about', icon: InfoIcon }
+					{ name: m['navigation.leaderboard'](), href: '/leaderboard', icon: TrophyIcon }
+					// { name: m['navigation.notifications'](), href: '/notifications', icon: BellIcon },
+					// { name: m['navigation.about'](), href: '/about', icon: InfoIcon }
 				]
 			},
 			{
