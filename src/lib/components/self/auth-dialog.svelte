@@ -7,6 +7,8 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { UserIcon, LockIcon, AlertCircle } from '@lucide/svelte/icons';
 	import { goto, invalidateAll } from '$app/navigation';
+	import { authenticate } from '$lib/utils/auth-api';
+	import { handleApiResponse, validation } from '$lib/utils/error-handling';
 
 	interface Props {
 		open?: boolean;
@@ -23,32 +25,43 @@
 		isLoading = true;
 		errorMessage = '';
 
-		try {
-			const response = await fetch('/api/auth', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					action,
-					username: formData.get('username'),
-					password: formData.get('password')
-				})
-			});
+		const username = formData.get('username') as string;
+		const password = formData.get('password') as string;
 
-			const result = await response.json();
+		// Client-side validation
+		const usernameValidation = validation.username(username);
+		if (!usernameValidation.valid) {
+			errorMessage = usernameValidation.error!;
+			isLoading = false;
+			return;
+		}
 
-			if (result.success) {
+		const passwordValidation = validation.password(password);
+		if (!passwordValidation.valid) {
+			errorMessage = passwordValidation.error!;
+			isLoading = false;
+			return;
+		}
+
+		// Make API call
+		const response = await authenticate({
+			action,
+			username,
+			password
+		});
+
+		const result = handleApiResponse(response, {
+			showErrorToast: false, // We'll handle errors manually for better UX
+			onSuccess: async () => {
 				open = false;
 				await invalidateAll(); // Refresh user data
-			} else {
-				errorMessage = result.message || 'An error occurred';
+			},
+			onError: (error) => {
+				errorMessage = error;
 			}
-		} catch (error) {
-			errorMessage = 'Network error occurred';
-		} finally {
-			isLoading = false;
-		}
+		});
+
+		isLoading = false;
 	}
 
 	function switchTab(tab: string) {
