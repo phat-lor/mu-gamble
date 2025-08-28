@@ -32,7 +32,7 @@
 		height: 100%;
 		position: relative;
 		transform-style: preserve-3d;
-		transition: transform 2s ease-in-out;
+		transition: transform 1s ease-in-out;
 	}
 
 	.coin-face {

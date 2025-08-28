@@ -3,6 +3,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import AppSidebar from './app-sidebar.svelte';
 	import { userStore } from '$lib/stores/user-store';
+	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
 		children: import('svelte').Snippet;
@@ -11,12 +12,29 @@
 	let { children }: Props = $props();
 
 	function getPageTitle(routeId: string | null): string {
-		if (!routeId) return 'Home';
+		if (!routeId) return m['navigation.home']();
 
 		const segments = routeId.split('/').filter(Boolean);
-		if (segments.length === 0) return 'Home';
+		if (segments.length === 0) return m['navigation.home']();
+
+		// Map route segments to localized names
+		const routeMap: Record<string, () => string> = {
+			leaderboard: () => m['navigation.leaderboard'](),
+			notifications: () => m['navigation.notifications'](),
+			about: () => m['navigation.about'](),
+			dice: () => m['navigation.dice'](),
+			flip: () => m['navigation.flip'](),
+			game: () => m['navigation.games']()
+		};
 
 		const lastSegment = segments[segments.length - 1];
+		const localizedTitle = routeMap[lastSegment];
+
+		if (localizedTitle) {
+			return localizedTitle();
+		}
+
+		// Fallback to capitalized segment name
 		return lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1);
 	}
 </script>

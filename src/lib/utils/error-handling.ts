@@ -177,12 +177,6 @@ export const validation = {
 			return { valid: false, error: 'Insufficient balance' };
 		}
 
-		// Reasonable maximum bet (50% of balance or 1000, whichever is smaller)
-		const maxBet = Math.min(balance * 0.5, 1000);
-		if (amount > maxBet) {
-			return { valid: false, error: `Maximum bet amount is ${maxBet.toFixed(2)}` };
-		}
-
 		return { valid: true };
 	},
 

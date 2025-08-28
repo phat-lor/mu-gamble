@@ -202,7 +202,7 @@ export const POST: RequestHandler = async (event) => {
 	if (endpoint.includes('/auth')) {
 		rateLimit = RATE_LIMITS.auth; // 5 attempts per 15 minutes
 	} else if (endpoint.includes('/game')) {
-		rateLimit = RATE_LIMITS.betting; // 10 bets per minute
+		rateLimit = RATE_LIMITS.betting; // 60 bets per minute
 	} else {
 		rateLimit = RATE_LIMITS.api; // 100 requests per minute
 	}
@@ -227,7 +227,7 @@ export const POST: RequestHandler = async (event) => {
 ```typescript
 export const RATE_LIMITS = {
 	auth: { windowMs: 15 * 60 * 1000, maxRequests: 5 }, // Auth: 5/15min
-	betting: { windowMs: 60 * 1000, maxRequests: 10 }, // Betting: 10/min
+	betting: { windowMs: 60 * 1000, maxRequests: 60 }, // Betting: 60/min
 	api: { windowMs: 60 * 1000, maxRequests: 100 } // API: 100/min
 } as const;
 ```

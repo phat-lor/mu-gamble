@@ -12,6 +12,7 @@
 		FloatingDice,
 		DiceControls
 	} from '$lib/components/game';
+	import * as m from '$lib/paraglide/messages';
 	import {
 		calculateDiceWinChance,
 		calculateMultiplier,
@@ -35,7 +36,7 @@
 	let isDragging = $state(false);
 
 	// Floating dice cube state
-	const cubePos = tweened<number>(50, { duration: 700, easing: cubicInOut }); // 0–100 %
+	const cubePos = tweened<number>(50, { duration: 500, easing: cubicInOut }); // 0–100 %
 	let cubeLabel = $state('50.00');
 	let cubeIsWin = $state<boolean>(true);
 	let cubeSliding = $state(false); // toggles idle float
@@ -192,7 +193,7 @@
 				const target = Math.min(100, Math.max(0, roll));
 
 				// Use the cubePos subscription to properly time the animation end
-				cubePos.set(target, { duration: 800, easing: cubicInOut }).then(() => {
+				cubePos.set(target, { duration: 500, easing: cubicInOut }).then(() => {
 					cubeSliding = false;
 
 					// Start idle timer to fade out after 5 seconds

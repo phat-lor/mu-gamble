@@ -331,14 +331,14 @@ interface ApiResponse<T> {
 **Configuration**:
 
 - Authentication: 5 attempts per 15 minutes
-- Gaming: 10 bets per minute per user
+- Gaming: 60 bets per minute per user (1 per second)
 - General API: 100 requests per minute per IP
 
 **Headers**:
 
 ```http
-X-RateLimit-Limit: 10
-X-RateLimit-Remaining: 7
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 45
 X-RateLimit-Reset: 1640995200
 ```
 
@@ -626,5 +626,68 @@ graph LR
 - Advanced fraud detection
 - Multi-factor authentication
 - Encrypted database at rest
+
+## Leaderboard System
+
+### Overview
+
+The leaderboard system provides competitive rankings for players based on various performance metrics. It encourages engagement through gamification while maintaining transparency and fairness.
+
+### Features
+
+**Ranking Metrics**:
+- Total Wagered: Sum of all bet amounts
+- Total Profit: Net profit/loss across all games
+- Biggest Win: Largest single payout
+- Win Rate: Percentage of winning bets
+
+**Filtering Options**:
+- Time-based filtering (All time, 24h, 7d, 30d)
+- Metric-based sorting
+- Pagination for performance
+
+### API Endpoints
+
+**GET /api/leaderboard**
+- Query parameters: page, limit, timeframe, metric
+- Returns paginated leaderboard data with rankings
+- Requires minimum 5 bets to appear on leaderboard
+
+### Database Design
+
+The leaderboard leverages existing bet and user tables through aggregated queries:
+- Real-time calculation (no separate leaderboard table)
+- Uses SQL aggregation functions for performance
+- Filters users with insufficient activity (< 5 bets)
+
+### Performance Optimizations
+
+- Pagination to limit response size
+- Indexed queries on bet.userId and bet.createdAt
+- Rounded monetary values to prevent precision issues
+- Caching potential for high-traffic scenarios
+
+### Security Considerations
+
+- No sensitive user data exposed
+- Rate limiting on API endpoints
+- Parameterized queries prevent SQL injection
+- Time-based filtering prevents excessive data exposure
+
+### Frontend Implementation
+
+**Components**:
+- Responsive table design with modern UI
+- Real-time filtering and sorting
+- Loading states and error handling
+- Mobile-optimized pagination
+- Multi-language support (EN/TH)
+
+**User Experience**:
+- Clean, minimal design without "AI slop"
+- Intuitive filtering controls
+- Visual ranking indicators (trophies for top 3)
+- Profit/loss indicators with color coding
+- Professional table styling with hover effects
 
 This architecture provides a solid foundation for a secure, scalable gambling platform while maintaining simplicity and clarity in the codebase.

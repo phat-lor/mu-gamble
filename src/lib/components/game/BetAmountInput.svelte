@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
+	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
 		betAmount: number;
@@ -13,7 +14,7 @@
 
 <div class="space-y-2">
 	<div class="flex items-center justify-between">
-		<label for="bet-amount" class="text-sm font-medium text-foreground">Bet Amount</label>
+		<label for="bet-amount" class="text-sm font-medium text-foreground">{m['game.betAmount']()}</label>
 	</div>
 	<div class="flex rounded-lg border border-border bg-muted">
 		<Input

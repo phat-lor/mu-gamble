@@ -1,4 +1,98 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from th!"
+	"hello_world": "สวัสดี, {name}!",
+	"navigation": {
+		"home": "หน้าหลัก",
+		"leaderboard": "อันดับ",
+		"notifications": "การแจ้งเตือน",
+		"about": "เกี่ยวกับ",
+		"games": "เกมส์",
+		"dice": "ลูกเต๋า",
+		"flip": "เหรียญ",
+		"main": "หลัก"
+	},
+	"user": {
+		"profile": "โปรไฟล์",
+		"settings": "การตั้งค่า",
+		"account": "บัญชี",
+		"balance": "ยอดเงิน",
+		"signIn": "เข้าสู่ระบบ",
+		"logOut": "ออกจากระบบ",
+		"admin": "ผู้ดูแล",
+		"username": "ชื่อผู้ใช้",
+		"themeToggle": "เปลี่ยนธีม",
+		"profileSettings": "โปรไฟล์และการตั้งค่า",
+		"features": "ฟีเจอร์"
+	},
+	"game": {
+		"letsGoGambling": "มาเล่นการพนันกัน",
+		"betAmount": "จำนวนเงินเดิมพัน",
+		"profit": "กำไร",
+		"history": "ประวัติ",
+		"multiplier": "ตัวคูณ",
+		"win": "ชนะ!",
+		"lose": "แพ้!",
+		"dice": {
+			"title": "เกมลูกเต๋า",
+			"rollUnder": "ทอยให้น้อยกว่า",
+			"rollOver": "ทอยให้มากกว่า",
+			"result": "ผลลัพธ์",
+			"target": "เป้าหมาย"
+		},
+		"flip": {
+			"title": "เกมเหรียญ",
+			"heads": "หัว",
+			"tails": "ก้อย",
+			"cat": "แมว",
+			"dog": "หมา"
+		}
+	},
+	"common": {
+		"loading": "กำลังโหลด...",
+		"error": "ข้อผิดพลาด",
+		"success": "สำเร็จ",
+		"cancel": "ยกเลิก",
+		"confirm": "ยืนยัน",
+		"close": "ปิด",
+		"save": "บันทึก",
+		"language": "ภาษา",
+		"theme": "ธีม",
+		"light": "สว่าง",
+		"dark": "มืด",
+		"filters": "ตัวกรอง",
+		"refresh": "รีเฟรช",
+		"retry": "ลองใหม่"
+	},
+	"leaderboard": {
+		"title": "กระดานผู้นำ",
+		"subtitle": "ผู้เล่นที่มีผลงานยอดเยี่ยมบนแพลตฟอร์ม",
+		"description": "ดูผู้เล่นชั้นนำที่จัดอันดับตามเมตริกต่างๆ รวมถึงยอดเดิมพันรวม กำไร และอัตราการชนะ",
+		"rank": "อันดับ",
+		"player": "ผู้เล่น",
+		"totalWagered": "ยอดเดิมพันรวม",
+		"totalProfit": "กำไรรวม",
+		"biggestWin": "การชนะที่ใหญ่ที่สุด",
+		"winRate": "อัตราการชนะ",
+		"totalBets": "จำนวนเดิมพันรวม",
+		"champion": "แชมป์",
+		"runner_up": "รองแชมป์",
+		"third_place": "อันดับ 3",
+		"noData": "ไม่มีข้อมูลกระดานผู้นำ",
+		"noDataDescription": "ยังไม่มีผู้เล่นที่มีการเดิมพันเพียงพอที่จะแสดงในกระดานผู้นำ",
+		"selectTimeframe": "เลือกช่วงเวลา",
+		"selectMetric": "เลือกเกณฑ์การจัดอันดับ",
+		"showing": "แสดง {start}-{end} จาก {total} ผู้เล่น",
+		"timeframe": {
+			"all": "ตลอดเวลา",
+			"24h": "24 ชั่วโมงที่ผ่านมา",
+			"7d": "7 วันที่ผ่านมา",
+			"30d": "30 วันที่ผ่านมา"
+		},
+		"metric": {
+			"totalWagered": "ยอดเดิมพันรวม",
+			"totalProfit": "กำไรรวม",
+			"biggestWin": "การชนะที่ใหญ่ที่สุด",
+			"winRate": "อัตราการชนะ"
+		}
+	}
 }

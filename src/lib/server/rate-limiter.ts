@@ -18,7 +18,7 @@ const store = new Map<string, RateLimitEntry>();
 // Default rate limit configurations
 export const RATE_LIMITS = {
 	auth: { windowMs: 15 * 60 * 1000, maxRequests: 5 }, // 5 attempts per 15 minutes
-	betting: { windowMs: 60 * 1000, maxRequests: 10 }, // 10 bets per minute
+	betting: { windowMs: 60 * 1000, maxRequests: 60 }, // 60 bets per minute (1 per second)
 	api: { windowMs: 60 * 1000, maxRequests: 100 } // 100 API calls per minute
 } as const;
 

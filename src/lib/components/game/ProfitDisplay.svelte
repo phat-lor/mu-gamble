@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Input } from '$lib/components/ui/input';
+	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
 		profitOnWin: number;
@@ -12,7 +13,7 @@
 <div class="space-y-2">
 	<div class="flex items-center justify-between">
 		<label for="profit-on-win" class="flex flex-row gap-1 text-sm font-medium text-foreground">
-			Profit on Win
+			{m['game.profit']()}
 			{#if multiplier}
 				<p class="text-muted-foreground">({multiplier.toFixed(2)}x)</p>
 			{/if}

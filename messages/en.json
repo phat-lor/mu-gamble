@@ -1,4 +1,98 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from en!"
+	"hello_world": "Hello, {name}!",
+	"navigation": {
+		"home": "Home",
+		"leaderboard": "Leaderboard",
+		"notifications": "Notifications",
+		"about": "About",
+		"games": "Games",
+		"dice": "Dice",
+		"flip": "Flip",
+		"main": "Main"
+	},
+	"user": {
+		"profile": "Profile",
+		"settings": "Settings",
+		"account": "Account",
+		"balance": "Balance",
+		"signIn": "Sign In",
+		"logOut": "Log out",
+		"admin": "Admin",
+		"username": "Username",
+		"themeToggle": "Theme Toggle",
+		"profileSettings": "Profile & Settings",
+		"features": "Features"
+	},
+	"game": {
+		"letsGoGambling": "Let's go gambling",
+		"betAmount": "Bet Amount",
+		"profit": "Profit",
+		"history": "History",
+		"multiplier": "Multiplier",
+		"win": "Win!",
+		"lose": "Lose!",
+		"dice": {
+			"title": "Dice Game",
+			"rollUnder": "Roll Under",
+			"rollOver": "Roll Over",
+			"result": "Result",
+			"target": "Target"
+		},
+		"flip": {
+			"title": "Coin Flip",
+			"heads": "Heads",
+			"tails": "Tails",
+			"cat": "Cat",
+			"dog": "Dog"
+		}
+	},
+	"common": {
+		"loading": "Loading...",
+		"error": "Error",
+		"success": "Success",
+		"cancel": "Cancel",
+		"confirm": "Confirm",
+		"close": "Close",
+		"save": "Save",
+		"language": "Language",
+		"theme": "Theme",
+		"light": "Light",
+		"dark": "Dark",
+		"filters": "Filters",
+		"refresh": "Refresh",
+		"retry": "Retry"
+	},
+	"leaderboard": {
+		"title": "Leaderboard",
+		"subtitle": "Top performing players on the platform",
+		"description": "View the top players ranked by various metrics including total wagered, profit, and win rates.",
+		"rank": "Rank",
+		"player": "Player",
+		"totalWagered": "Total Wagered",
+		"totalProfit": "Total Profit",
+		"biggestWin": "Biggest Win",
+		"winRate": "Win Rate",
+		"totalBets": "Total Bets",
+		"champion": "Champion",
+		"runner_up": "Runner-up",
+		"third_place": "3rd Place",
+		"noData": "No leaderboard data available",
+		"noDataDescription": "There are no players with enough bets to display on the leaderboard yet.",
+		"selectTimeframe": "Select timeframe",
+		"selectMetric": "Select ranking metric",
+		"showing": "Showing {start}-{end} of {total} players",
+		"timeframe": {
+			"all": "All Time",
+			"24h": "Last 24 Hours",
+			"7d": "Last 7 Days",
+			"30d": "Last 30 Days"
+		},
+		"metric": {
+			"totalWagered": "Total Wagered",
+			"totalProfit": "Total Profit",
+			"biggestWin": "Biggest Win",
+			"winRate": "Win Rate"
+		}
+	}
 }

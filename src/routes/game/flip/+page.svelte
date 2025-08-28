@@ -111,8 +111,10 @@
 		if (result) {
 			const { flipResult, win, payout, newBalance, betId } = result;
 
-			// Animate coin flip
-			const spins = 3 + Math.floor(Math.random() * 7);
+			// Animate coin flip - ensure always engaging spin
+			const minSpins = 5; // Minimum 5 full rotations for suspense
+			const extraSpins = Math.floor(Math.random() * 8); // 0-7 extra spins
+			const spins = minSpins + extraSpins; // Total: 5-12 spins
 			const finalRotation = flipResult === 'cat' ? 0 : 180;
 			coinRotation = spins * 360 + finalRotation;
 
@@ -139,7 +141,7 @@
 				// Update balance in the global store
 				userStore.updateBalance(newBalance);
 				isFlipping = false;
-			}, 2000);
+			}, 1000); // Much faster - 1 second instead of 2
 		}
 	}
 </script>

@@ -22,54 +22,64 @@
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
 	import { goto, invalidateAll } from '$app/navigation';
 	import AuthDialog from './auth-dialog.svelte';
+	import LanguageSwitcher from './language-switcher.svelte';
 	import type { PublicUser } from '$lib/server/db/schema';
 	import { userStore } from '$lib/stores/user-store';
+	import * as m from '$lib/paraglide/messages';
 
 	// Subscribe to the user store
 	$: userState = $userStore;
 	$: user = userState.user;
 
 	// Structured navigation map
-	const navMap = [
-		{
-			title: 'Main',
-			items: [
-				{ name: 'Home', href: '/', icon: HomeIcon },
-				{ name: 'Leaderboard', href: '/leaderboard', icon: TrophyIcon },
-				{ name: 'Notifications', href: '/notifications', icon: BellIcon },
-				{ name: 'About', href: '/about', icon: InfoIcon }
-			]
-		},
-		{
-			title: 'Games',
-			items: [
-				{ name: 'Dice', href: '/game/dice', icon: DicesIcon },
-				{ name: 'Flip', href: '/game/flip', icon: CoinsIcon }
-			]
-		}
-	];
+	function getNavMap() {
+		return [
+			{
+				title: m['navigation.main'](),
+				items: [
+					{ name: m['navigation.home'](), href: '/', icon: HomeIcon },
+					{ name: m['navigation.leaderboard'](), href: '/leaderboard', icon: TrophyIcon },
+					{ name: m['navigation.notifications'](), href: '/notifications', icon: BellIcon },
+					{ name: m['navigation.about'](), href: '/about', icon: InfoIcon }
+				]
+			},
+			{
+				title: m['navigation.games'](),
+				items: [
+					{ name: m['navigation.dice'](), href: '/game/dice', icon: DicesIcon },
+					{ name: m['navigation.flip'](), href: '/game/flip', icon: CoinsIcon }
+				]
+			}
+		];
+	}
+
+	$: navMap = getNavMap();
 
 	// User menu items
-	const userMenuItems = [
-		{
-			title: 'Profile & Settings',
-			items: [
-				{ name: 'Account', href: '/profile', icon: UserIcon, action: 'profile' },
-				{ name: 'Settings', href: '/settings', icon: SettingsIcon, action: 'settings' }
-			]
-		},
-		{
-			title: 'Features',
-			items: [
-				{
-					name: 'Theme Toggle',
-					href: '#',
-					icon: mode.current === 'light' ? MoonIcon : SunIcon,
-					action: 'theme'
-				}
-			]
-		}
-	];
+	function getUserMenuItems() {
+		return [
+			{
+				title: m['user.profileSettings'](),
+				items: [
+					{ name: m['user.account'](), href: '/profile', icon: UserIcon, action: 'profile' },
+					{ name: m['user.settings'](), href: '/settings', icon: SettingsIcon, action: 'settings' }
+				]
+			},
+			{
+				title: m['user.features'](),
+				items: [
+					{
+						name: m['user.themeToggle'](),
+						href: '#',
+						icon: mode.current === 'light' ? MoonIcon : SunIcon,
+						action: 'theme'
+					}
+				]
+			}
+		];
+	}
+
+	$: userMenuItems = getUserMenuItems();
 
 	type MenuButtonProps = HTMLAttributes<HTMLAnchorElement | HTMLButtonElement>;
 
@@ -119,12 +129,15 @@
 
 <Sidebar.Root collapsible="offcanvas">
 	<Sidebar.Header>
-		<div class="flex items-center gap-2 p-2">
-			<img src="/images/brand.png" alt="MU888" class="size-6" />
-			<span class="text-base font-semibold">MU888</span>
-			{#if user?.isAdmin}
-				<Badge variant="secondary" class="text-xs">Admin</Badge>
-			{/if}
+		<div class="flex items-center justify-between gap-2 p-2">
+			<div class="flex items-center gap-2">
+				<img src="/images/brand.png" alt="MU888" class="size-6" />
+				<span class="text-base font-semibold">MU888</span>
+				{#if user?.isAdmin}
+					<Badge variant="secondary" class="text-xs">{m['user.admin']()}</Badge>
+				{/if}
+			</div>
+			<LanguageSwitcher />
 		</div>
 	</Sidebar.Header>
 
@@ -209,7 +222,7 @@
 										<span class="truncate font-semibold">@{user.username}</span>
 										<div class="flex items-center gap-1 text-xs text-muted-foreground">
 											<CoinsIcon class="size-3" />
-											<span>Balance: {user.balance.toFixed(2)}</span>
+											<span>{m['user.balance']()}: {user.balance.toFixed(2)}</span>
 										</div>
 									</div>
 								</div>
@@ -238,7 +251,7 @@
 								class="cursor-pointer text-destructive transition-colors duration-200 hover:bg-destructive/10 hover:text-destructive"
 							>
 								<LogOutIcon class="size-4" />
-								Log out
+								{m['user.logOut']()}
 							</DropdownMenu.Item>
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
@@ -248,7 +261,7 @@
 						{#snippet children({ props })}
 							<Sidebar.MenuButton {...props} size="lg">
 								<UserIcon class="size-4" />
-								<span class="font-medium">Sign In</span>
+								<span class="font-medium">{m['user.signIn']()}</span>
 							</Sidebar.MenuButton>
 						{/snippet}
 					</AuthDialog>

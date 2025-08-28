@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
+
 	interface Props {
 		cubeVisible: boolean;
 		cubePos: number;
@@ -9,6 +11,77 @@
 	}
 
 	let { cubeVisible, cubePos, cubeOpacity, cubeLabel, cubeIsWin, cubeSliding }: Props = $props();
+
+	// Animation state for number counting
+	let displayValue = $state('');
+	let isAnimating = $state(false);
+	let animationInterval: ReturnType<typeof setInterval>;
+	let lastTargetValue = $state(''); // Track the last target to detect new bets
+
+	// Watch for label changes and trigger counting animation
+	$effect(() => {
+		if (cubeLabel && cubeLabel !== lastTargetValue) {
+			// Clear any existing animation immediately
+			if (animationInterval) {
+				clearInterval(animationInterval);
+				isAnimating = false;
+			}
+
+			const targetValue = parseFloat(cubeLabel);
+			const currentValue = parseFloat(displayValue) || 0;
+
+			// Update the last target value
+			lastTargetValue = cubeLabel;
+
+			if (!isNaN(targetValue) && !isNaN(currentValue)) {
+				startCountingAnimation(currentValue, targetValue);
+			} else {
+				displayValue = cubeLabel;
+			}
+		}
+	});
+
+	function startCountingAnimation(from: number, to: number) {
+		// Clear any existing animation
+		if (animationInterval) {
+			clearInterval(animationInterval);
+		}
+
+		isAnimating = true;
+		let current = from;
+		const totalSteps = 15; // Fewer steps for faster animation
+		const step = (to - from) / totalSteps;
+		const duration = 400; // Much faster - 0.4 seconds total animation
+		const intervalTime = duration / totalSteps;
+
+		animationInterval = setInterval(() => {
+			current += step;
+
+			// Ensure we don't overshoot
+			if ((step > 0 && current >= to) || (step < 0 && current <= to)) {
+				current = to;
+				clearInterval(animationInterval);
+				isAnimating = false;
+			}
+
+			displayValue = current.toFixed(2);
+		}, intervalTime);
+	}
+
+	// Initialize with current label
+	$effect(() => {
+		if (cubeLabel && !displayValue && !lastTargetValue) {
+			displayValue = cubeLabel;
+			lastTargetValue = cubeLabel;
+		}
+	});
+
+	// Cleanup on component destroy
+	onDestroy(() => {
+		if (animationInterval) {
+			clearInterval(animationInterval);
+		}
+	});
 </script>
 
 {#if cubeVisible}
@@ -22,7 +95,7 @@
 				<span
 					class={`text-xl font-extrabold tracking-tight tabular-nums ${cubeIsWin ? 'text-emerald-500' : 'text-rose-500'}`}
 				>
-					{cubeLabel}
+					{displayValue}
 				</span>
 			</div>
 

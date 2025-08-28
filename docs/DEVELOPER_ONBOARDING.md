@@ -43,6 +43,7 @@ Welcome to the Mahidol888 development team! This guide will help you get up to s
 - [ ] Study the provably fair gaming implementation
 - [ ] Review API endpoints and their security measures
 - [ ] Understand the component architecture
+- [ ] Explore the leaderboard system implementation (/leaderboard page and /api/leaderboard endpoint)
 
 **Success Criteria**: You can navigate the codebase confidently
 
