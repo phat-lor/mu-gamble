@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mahidol888-app
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:3000:3000' # Only bind to localhost for security
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/production.db
+      - SESSION_SECRET=${SESSION_SECRET}
+      - CSRF_SECRET=${CSRF_SECRET}
+      - ENABLE_RATE_LIMITING=true
+      - MAX_LOGIN_ATTEMPTS=5
+      - MAX_BET_ATTEMPTS=10
+      - PUBLIC_SITE_URL=${PUBLIC_SITE_URL}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+    volumes:
+      - app_data:/app/data
+      - app_logs:/app/logs
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/csrf']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  nginx:
+    image: nginx:alpine
+    container_name: mahidol888-nginx
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - app-network
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  # Optional: Database backup service
+  backup:
+    image: alpine:latest
+    container_name: mahidol888-backup
+    restart: 'no'
+    volumes:
+      - app_data:/data:ro
+      - backup_data:/backup
+    command: |
+      sh -c "
+        cp /data/production.db /backup/production-$$(date +%Y%m%d-%H%M%S).db
+        find /backup -name '*.db' -mtime +7 -delete
+      "
+    networks:
+      - app-network
+    profiles:
+      - backup
+
+volumes:
+  app_data:
+    driver: local
+  app_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+  backup_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
