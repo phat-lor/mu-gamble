@@ -31,6 +31,14 @@ print_error() {
 check_env_vars() {
     print_status "Checking environment variables..."
     
+    # Source .env file if it exists
+    if [[ -f ".env" ]]; then
+        print_status "Loading environment variables from .env file..."
+        set -a  # automatically export all variables
+        source .env
+        set +a  # stop automatically exporting
+    fi
+    
     local required_vars=("SESSION_SECRET" "CSRF_SECRET" "PUBLIC_SITE_URL")
     local missing_vars=()
     

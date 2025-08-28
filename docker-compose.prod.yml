@@ -9,16 +9,11 @@ services:
     restart: unless-stopped
     ports:
       - '127.0.0.1:3000:3000' # Only bind to localhost for security
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:/app/data/production.db
-      - SESSION_SECRET=${SESSION_SECRET}
-      - CSRF_SECRET=${CSRF_SECRET}
-      - ENABLE_RATE_LIMITING=true
-      - MAX_LOGIN_ATTEMPTS=5
-      - MAX_BET_ATTEMPTS=10
-      - PUBLIC_SITE_URL=${PUBLIC_SITE_URL}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
     volumes:
       - app_data:/app/data
       - app_logs:/app/logs
