@@ -89,7 +89,7 @@ deploy() {
     
     # Build and start services
     print_status "Building and starting services..."
-    docker-compose -f "$COMPOSE_FILE" up -d --build
+    docker compose -f "$COMPOSE_FILE" up -d --build
     
     # Wait for services to be healthy
     print_status "Waiting for services to be healthy..."
@@ -97,7 +97,7 @@ deploy() {
     local attempt=1
     
     while [[ $attempt -le $max_attempts ]]; do
-        if docker-compose -f "$COMPOSE_FILE" ps | grep -q "healthy"; then
+        if docker compose -f "$COMPOSE_FILE" ps | grep -q "healthy"; then
             print_status "Services are healthy!"
             break
         fi
@@ -109,7 +109,7 @@ deploy() {
     
     if [[ $attempt -gt $max_attempts ]]; then
         print_error "Services failed to become healthy within the expected time"
-        docker-compose -f "$COMPOSE_FILE" logs
+        docker compose -f "$COMPOSE_FILE" logs
         exit 1
     fi
     
@@ -121,7 +121,7 @@ rollback() {
     print_status "Rolling back deployment..."
     
     # Stop current services
-    docker-compose -f "$COMPOSE_FILE" down
+    docker compose -f "$COMPOSE_FILE" down
     
     # Restore from backup if specified
     if [[ -n "$1" ]]; then
@@ -140,7 +140,7 @@ rollback() {
     fi
     
     # Start services
-    docker-compose -f "$COMPOSE_FILE" up -d
+    docker compose -f "$COMPOSE_FILE" up -d
     
     print_status "Rollback completed"
 }
@@ -148,10 +148,10 @@ rollback() {
 # Function to show status
 status() {
     print_status "Service status:"
-    docker-compose -f "$COMPOSE_FILE" ps
+    docker compose -f "$COMPOSE_FILE" ps
     
     print_status "Recent logs:"
-    docker-compose -f "$COMPOSE_FILE" logs --tail=20
+    docker compose -f "$COMPOSE_FILE" logs --tail=20
 }
 
 # Function to show help
@@ -191,11 +191,11 @@ case "${1:-deploy}" in
         status
         ;;
     "logs")
-        docker-compose -f "$COMPOSE_FILE" logs -f
+        docker compose -f "$COMPOSE_FILE" logs -f
         ;;
     "stop")
         print_status "Stopping services..."
-        docker-compose -f "$COMPOSE_FILE" down
+        docker compose -f "$COMPOSE_FILE" down
         ;;
     "help"|"-h"|"--help")
         show_help
