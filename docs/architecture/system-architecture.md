@@ -56,7 +56,7 @@ graph TB
 
 - **Rendering**: Server-Side Rendering (SSR) + Client-Side Hydration
 - **Routing**: File-based routing with layout system
-- **State Management**: Svelte 5 runes (`$state`, `$derived`, `$effect`)
+- **State Management**: Svelte 5 runes (`$state`, `$derived`, `$effect`) with global stores
 - **Styling**: TailwindCSS with custom component library
 - **Type Safety**: TypeScript throughout
 
@@ -66,8 +66,47 @@ graph TB
 components/
 ├── ui/           # Generic UI components (buttons, inputs, etc.)
 ├── game/         # Game-specific components
-└── self/         # Application-specific components
+├── self/         # Application-specific components
+└── providers/    # State management providers
 ```
+
+### State Management Architecture
+
+**Global State Management**:
+
+```mermaid
+graph TD
+    A[UserProvider] --> B[UserStore]
+    B --> C[AppSidebar]
+    B --> D[Dice Game]
+    B --> E[Flip Game]
+    B --> F[Other Components]
+
+    G[Game API Response] --> H[updateBalance]
+    H --> B
+    B --> I[Reactive Updates]
+```
+
+**Store Structure**:
+
+```typescript
+interface UserState {
+  user: PublicUser | null;
+  isLoading: boolean;
+}
+
+// Store methods
+- setUser(user: PublicUser | null)
+- updateBalance(newBalance: number)
+- setLoading(isLoading: boolean)
+- reset()
+```
+
+**Provider Pattern**:
+
+- `UserProvider`: Initializes store with server data
+- `userStore`: Global reactive state for user data
+- Components subscribe to store for real-time updates
 
 ### Backend Architecture
 

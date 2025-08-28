@@ -2,14 +2,13 @@
 	import { page } from '$app/stores';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import AppSidebar from './app-sidebar.svelte';
-	import type { PublicUser } from '$lib/server/db/schema';
+	import { userStore } from '$lib/stores/user-store';
 
 	interface Props {
 		children: import('svelte').Snippet;
-		user: PublicUser | null;
 	}
 
-	let { children, user }: Props = $props();
+	let { children }: Props = $props();
 
 	function getPageTitle(routeId: string | null): string {
 		if (!routeId) return 'Home';
@@ -23,7 +22,7 @@
 </script>
 
 <Sidebar.Provider>
-	<AppSidebar {user} />
+	<AppSidebar />
 
 	<Sidebar.Inset class="sidebar-container">
 		<header

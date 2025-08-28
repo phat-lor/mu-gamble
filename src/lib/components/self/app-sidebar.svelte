@@ -23,12 +23,11 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import AuthDialog from './auth-dialog.svelte';
 	import type { PublicUser } from '$lib/server/db/schema';
+	import { userStore } from '$lib/stores/user-store';
 
-	interface Props {
-		user: PublicUser | null;
-	}
-
-	let { user }: Props = $props();
+	// Subscribe to the user store
+	$: userState = $userStore;
+	$: user = userState.user;
 
 	// Structured navigation map
 	const navMap = [

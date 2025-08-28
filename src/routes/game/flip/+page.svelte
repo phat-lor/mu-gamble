@@ -23,9 +23,15 @@
 	let isFlipping = $state(false);
 	let showWin = $state(false);
 	let overlayMultiplier = $state(2.0);
+	import { userStore } from '$lib/stores/user-store';
+
 	let overlayPayout = $state(0);
 	let _overlayTimer: ReturnType<typeof setTimeout> | null = null;
-	let userBalance = $state(1000); // Default balance for new users
+
+	// Subscribe to user store for balance
+	let userState = $derived($userStore);
+	let userBalance = $derived(userState.user?.balance ?? 1000);
+
 	let histories = $state<GameHistoryType[]>([]);
 
 	const multiplier = 2.0;
@@ -53,7 +59,7 @@
 			// Convert flip game history with cat/dog labels
 			histories = data.bets.map((bet) => ({
 				win: bet.win,
-				value: bet.result === 1 ? 'Cat' : 'Dog',
+				value: bet.result === 0 ? 'Cat' : 'Dog',
 				betId: bet.id
 			}));
 		}
@@ -115,7 +121,7 @@
 				// Update game history
 				histories = addToHistory(histories, {
 					win,
-					value: flipResult,
+					value: flipResult === 'cat' ? 'Cat' : 'Dog',
 					betId
 				});
 
@@ -130,8 +136,8 @@
 					showWin = false;
 				}
 
-				// Update balance and state
-				userBalance = newBalance;
+				// Update balance in the global store
+				userStore.updateBalance(newBalance);
 				isFlipping = false;
 			}, 2000);
 		}

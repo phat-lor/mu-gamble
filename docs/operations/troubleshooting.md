@@ -251,6 +251,182 @@ sqlite3 local.db "SELECT id, user_id, expires_at FROM session WHERE expires_at >
 sqlite3 local.db "DELETE FROM session WHERE expires_at < datetime('now');"
 ```
 
+### Problem: Flip Game Results Display Incorrectly
+
+**Symptoms:**
+
+- Flip game history shows "dog" and "cat" in lowercase
+- Game results display inconsistent capitalization
+- History shows wrong mapping (1 = Cat, 0 = Dog instead of correct mapping)
+
+**Diagnosis:**
+
+```bash
+# Check the result mapping logic
+grep -r "result.*1.*Cat" src/routes/game/flip/
+grep -r "flipResult.*cat" src/routes/game/flip/
+```
+
+**Root Cause:**
+
+The flip game was incorrectly mapping the result values:
+
+- `0 = cat` (should be "Cat")
+- `1 = dog` (should be "Dog")
+- But the display logic was backwards
+
+**Solution:**
+
+Fixed the result mapping and capitalization:
+
+```typescript
+// Before (incorrect mapping and lowercase)
+value: bet.result === 1 ? 'Cat' : 'Dog', // Wrong mapping
+value: flipResult, // Lowercase
+
+// After (correct mapping and proper capitalization)
+value: bet.result === 0 ? 'Cat' : 'Dog', // Correct mapping
+value: flipResult === 'cat' ? 'Cat' : 'Dog', // Proper capitalization
+```
+
+**Prevention:**
+
+- Ensure consistent capitalization across all UI components
+- Test result mapping logic thoroughly
+- Use proper TypeScript types for result values
+
+### Problem: Maximum Bet Amount Too Low
+
+**Symptoms:**
+
+- Cannot bet more than 10% of balance
+- Error message: "Maximum bet amount is X.XX"
+- Want to bet more but validation prevents it
+- Balance is sufficient but bet is rejected
+
+**Diagnosis:**
+
+```bash
+# Check current validation logic
+grep -r "maxBet" src/lib/utils/error-handling.ts
+
+# Check balance vs maximum bet calculation
+# Current: maxBet = Math.min(balance * 0.5, 1000)
+```
+
+**Root Cause:**
+
+The client-side validation was limiting bets to 10% of the user's balance, which was too restrictive for many users.
+
+**Solution:**
+
+Updated the maximum bet calculation to allow up to 50% of balance:
+
+```typescript
+// Before (too restrictive)
+const maxBet = Math.min(balance * 0.1, 1000); // 10% of balance
+
+// After (more reasonable)
+const maxBet = Math.min(balance * 0.5, 1000); // 50% of balance
+```
+
+**Prevention:**
+
+- Review bet limits periodically based on user feedback
+- Consider implementing configurable bet limits
+- Test with various balance amounts
+
+### Problem: User Balance Not Updating Globally
+
+**Symptoms:**
+
+- Balance updates in game components but not reflected in sidebar
+- Need to refresh page to see updated balance
+- Balance shows different values in different parts of the UI
+- Game results show new balance but sidebar shows old balance
+
+**Diagnosis:**
+
+```bash
+# Check if user store is properly initialized
+# In browser console, check store state
+console.log('User store state:', $userStore);
+
+# Check if balance updates are being called
+# Look for userStore.updateBalance() calls in game components
+grep -r "updateBalance" src/routes/game/
+```
+
+**Root Cause:**
+
+This issue occurs when game components update local balance state instead of the global user store, or when the user store is not properly subscribed to by all components.
+
+**Solution:**
+
+Ensure all balance updates go through the global user store:
+
+```typescript
+// ❌ Wrong - local state only
+userBalance = newBalance;
+
+// ✅ Correct - global store update
+userStore.updateBalance(newBalance);
+```
+
+**Prevention:**
+
+- Always use `userStore.updateBalance()` for balance changes
+- Subscribe to user store in all components that display balance
+- Use `$derived($userStore)` for reactive balance display
+
+### Problem: Authentication Dialog State Not Refreshing
+
+**Symptoms:**
+
+- Login/register succeeds but UI doesn't update to show logged-in state
+- Dialog closes but sidebar still shows "Sign In" button
+- User appears logged out despite successful authentication
+- Need to manually refresh page to see logged-in state
+
+**Diagnosis:**
+
+```bash
+# Check browser DevTools > Network tab during login
+# Look for successful auth API response (200 status)
+
+# Check browser DevTools > Application > Cookies
+# Verify session cookie is being set
+
+# Check if invalidateAll() is being called in auth dialog
+grep -r "invalidateAll" src/lib/components/self/auth-dialog.svelte
+```
+
+**Root Cause:**
+
+This issue was caused by the `handleApiResponse` function in `src/lib/utils/error-handling.ts` only calling the `onSuccess` callback when response data existed. Since the auth API returns `{ success: true, message: '...' }` without a `data` field, the callback was never executed.
+
+**Solution:**
+
+The issue has been fixed by updating the `handleApiResponse` function to always call the `onSuccess` callback for successful responses:
+
+```typescript
+// Before (problematic)
+if (onSuccess && data) {
+	onSuccess(data);
+}
+
+// After (fixed)
+if (onSuccess) {
+	onSuccess(data);
+}
+```
+
+**Prevention:**
+
+- Ensure API success callbacks are always executed for successful responses
+- Test authentication flow end-to-end including UI state updates
+- Monitor that `invalidateAll()` is properly refreshing page data
+
 ### Problem: Permission Errors
 
 **Symptoms:**
@@ -370,6 +546,7 @@ WHERE id = 'bet_id';
 - "CSRF token validation failed" errors
 - Forms not submitting
 - API calls failing
+- Game bets failing with CSRF errors
 
 **Diagnosis:**
 
@@ -379,32 +556,57 @@ curl http://localhost:5173/api/csrf
 
 # Check browser headers
 # In DevTools > Network > Headers
+
+# Check if API functions are using apiCall
+grep -r "apiCall" src/lib/api.ts
 ```
+
+**Root Cause:**
+
+This issue occurs when API functions don't include CSRF tokens in their requests. The game API functions were using direct `fetch` calls instead of the `apiCall` utility that automatically handles CSRF tokens.
 
 **Solutions:**
 
-1. **Token Generation:**
+1. **Use apiCall Utility:**
 
-```javascript
-// In browser console, get CSRF token
-fetch('/api/csrf')
-	.then((r) => r.json())
-	.then((d) => console.log('CSRF Token:', d.token));
-```
+```typescript
+// ❌ Wrong - direct fetch without CSRF
+const response = await fetch('/api/game/flip', {
+	method: 'POST',
+	headers: { 'Content-Type': 'application/json' },
+	body: JSON.stringify(request)
+});
 
-2. **Header Configuration:**
-
-```javascript
-// Verify X-CSRF-Token header is being sent
-fetch('/api/game/dice', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-CSRF-Token': 'your_token_here'
-  },
-  body: JSON.stringify({...})
+// ✅ Correct - using apiCall with automatic CSRF
+return apiCall<CoinFlipBetResult>('/api/game/flip', {
+	method: 'POST',
+	body: JSON.stringify(request)
 });
 ```
+
+2. **Manual CSRF Token:**
+
+```javascript
+// Get CSRF token manually if needed
+const csrfResponse = await fetch('/api/csrf');
+const { token } = await csrfResponse.json();
+
+// Include in request headers
+fetch('/api/game/flip', {
+	method: 'POST',
+	headers: {
+		'Content-Type': 'application/json',
+		'X-CSRF-Token': token
+	},
+	body: JSON.stringify(request)
+});
+```
+
+**Prevention:**
+
+- Always use `apiCall` utility for state-changing API requests
+- The `apiCall` function automatically fetches and includes CSRF tokens
+- Test API endpoints with proper CSRF token handling
 
 ## Rate Limiting Issues
 

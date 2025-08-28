@@ -139,8 +139,13 @@
 		betAmount = betAmount * multiplierValue;
 	}
 
+	import { userStore } from '$lib/stores/user-store';
+
 	let isPlacingBet = $state(false);
-	let userBalance = $state(1000); // Default balance for new users
+
+	// Subscribe to user store for balance
+	let userState = $derived($userStore);
+	let userBalance = $derived(userState.user?.balance ?? 1000);
 
 	async function handleBet() {
 		if (isPlacingBet) return;
@@ -206,8 +211,8 @@
 
 				histories = addToHistory(histories, newHistory);
 
-				// Update user balance and show toast
-				userBalance = newBalance;
+				// Update user balance in the global store
+				userStore.updateBalance(newBalance);
 
 				console.log('Bet result:', {
 					roll: roll.toFixed(2),

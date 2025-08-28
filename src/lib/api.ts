@@ -1,4 +1,5 @@
 // API utility functions for game backend
+import { apiCall } from '$lib/utils/error-handling';
 
 export interface DiceBetRequest {
 	amount: number;
@@ -82,22 +83,10 @@ export interface BetVerificationData {
  * Place a dice bet
  */
 export async function placeDiceBet(request: DiceBetRequest): Promise<ApiResponse<DiceBetResult>> {
-	try {
-		const response = await fetch('/api/game/dice', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(request)
-		});
-
-		return await response.json();
-	} catch (error) {
-		return {
-			success: false,
-			error: 'Network error occurred'
-		};
-	}
+	return apiCall<DiceBetResult>('/api/game/dice', {
+		method: 'POST',
+		body: JSON.stringify(request)
+	});
 }
 
 /**
@@ -106,22 +95,10 @@ export async function placeDiceBet(request: DiceBetRequest): Promise<ApiResponse
 export async function placeCoinFlipBet(
 	request: CoinFlipBetRequest
 ): Promise<ApiResponse<CoinFlipBetResult>> {
-	try {
-		const response = await fetch('/api/game/flip', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(request)
-		});
-
-		return await response.json();
-	} catch (error) {
-		return {
-			success: false,
-			error: 'Network error occurred'
-		};
-	}
+	return apiCall<CoinFlipBetResult>('/api/game/flip', {
+		method: 'POST',
+		body: JSON.stringify(request)
+	});
 }
 
 /**
@@ -144,7 +121,7 @@ export async function getBetHistory(
 
 		const response = await fetch(`/api/game/history?${params}`);
 		return await response.json();
-	} catch (error) {
+	} catch {
 		return {
 			success: false,
 			error: 'Network error occurred'
@@ -159,7 +136,7 @@ export async function verifyBet(betId: string): Promise<ApiResponse<BetVerificat
 	try {
 		const response = await fetch(`/api/game/verify?betId=${encodeURIComponent(betId)}`);
 		return await response.json();
-	} catch (error) {
+	} catch {
 		return {
 			success: false,
 			error: 'Network error occurred'
@@ -180,7 +157,7 @@ export async function getDiceGameData(): Promise<
 	try {
 		const response = await fetch('/api/game/dice');
 		return await response.json();
-	} catch (error) {
+	} catch {
 		return {
 			success: false,
 			error: 'Network error occurred'
@@ -201,7 +178,7 @@ export async function getFlipGameData(): Promise<
 	try {
 		const response = await fetch('/api/game/flip');
 		return await response.json();
-	} catch (error) {
+	} catch {
 		return {
 			success: false,
 			error: 'Network error occurred'

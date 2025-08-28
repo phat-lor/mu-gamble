@@ -4,6 +4,7 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import AppShell from '$lib/components/self/appshell.svelte';
+	import UserProvider from '$lib/components/providers/user-provider.svelte';
 	import type { LayoutData } from './$types';
 
 	interface Props {
@@ -20,6 +21,8 @@
 </svelte:head>
 
 <Toaster position="top-center" richColors />
-<AppShell user={data.user}>
-	{@render children?.()}
-</AppShell>
+<UserProvider user={data.user}>
+	<AppShell>
+		{@render children?.()}
+	</AppShell>
+</UserProvider>
