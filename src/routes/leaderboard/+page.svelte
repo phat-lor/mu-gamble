@@ -57,11 +57,11 @@
 	];
 
 	const metricOptions = [
+		{ value: 'balance', label: m['leaderboard.metric.balance']() }
 		{ value: 'total_wagered', label: m['leaderboard.metric.totalWagered']() },
 		{ value: 'total_profit', label: m['leaderboard.metric.totalProfit']() },
 		{ value: 'biggest_win', label: m['leaderboard.metric.biggestWin']() },
-		{ value: 'win_rate', label: m['leaderboard.metric.winRate']() },
-		{ value: 'balance', label: m['leaderboard.metric.balance']() }
+		{ value: 'win_rate', label: m['leaderboard.metric.winRate']() }
 	];
 
 	// Initialize from URL params
